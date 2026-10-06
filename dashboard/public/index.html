@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trạm kiểm soát ZKP-ZTNA</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="bar">
+  <div class="title">
+    <h1>Trạm kiểm soát truy cập ZKP-ZTNA</h1>
+    <p>Mọi kết nối vào mạng IoT của nhà máy phải kèm bằng chứng ZKP. PEP và PDP quyết định mà không thấy thuộc tính thiết bị.</p>
+  </div>
+  <div class="lamps" aria-live="polite">
+    <span class="lamp" id="lamp-pdp"><i></i>PDP</span>
+    <span class="lamp" id="lamp-pep"><i></i>PEP + broker</span>
+    <time id="clock"></time>
+  </div>
+</header>
+
+<main>
+  <section class="console" aria-labelledby="h-ctl">
+    <h2 id="h-ctl" class="sr">Bảng điều khiển</h2>
+    <div class="unit" id="unit-pdp">
+      <div class="unit-head"><span class="led"></span><b>PDP</b><span class="port">:8081</span></div>
+      <p class="unit-state" id="st-pdp">Đã tắt</p>
+      <p class="unit-desc">Cấp nonce, kiểm tra proof Groth16, ra quyết định</p>
+      <button class="btn" id="btn-pdp" type="button">Bật PDP</button>
+    </div>
+    <div class="unit" id="unit-pep">
+      <div class="unit-head"><span class="led"></span><b>PEP + broker MQTT</b><span class="port">:1883, :8080</span></div>
+      <p class="unit-state" id="st-pep">Đã tắt</p>
+      <label class="unit-opt">Thời hạn phiên
+        <select id="pep-session">
+          <option value="0">Theo chính sách</option>
+          <option value="10" selected>10 giây (demo)</option>
+          <option value="30">30 giây</option>
+          <option value="60">60 giây</option>
+        </select>
+      </label>
+      <button class="btn" id="btn-pep" type="button">Bật PEP</button>
+    </div>
+    <div class="unit" id="unit-iss">
+      <div class="unit-head"><span class="led"></span><b>Issuer (MDM)</b></div>
+      <p class="unit-state" id="st-iss">–</p>
+      <p class="unit-desc">Credential có hạn 24 giờ. Quá hạn thì mọi thiết bị đều bị từ chối.</p>
+      <button class="btn ghost" id="btn-iss" type="button">Cấp lại credential</button>
+    </div>
+    <div class="unit quick">
+      <div class="unit-head"><b>Chạy nhanh</b></div>
+      <button class="btn" id="btn-demo" type="button">Bật PDP, PEP và D1, D5, D6</button>
+      <button class="btn ghost" id="btn-alldev" type="button">Bật cả 7 thiết bị</button>
+      <button class="btn danger" id="btn-stopall" type="button">Dừng tất cả</button>
+    </div>
+    <p class="toast" id="toast" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="mimic" aria-label="Sơ đồ luồng truy cập">
+    <svg id="mimic" viewBox="0 0 1200 440" role="img" aria-label="Sơ đồ: thiết bị, cổng PEP, PDP và các topic MQTT"></svg>
+    <ul class="legend">
+      <li><b class="sw allow"></b>Được phép</li>
+      <li><b class="sw deny"></b>Bị chặn</li>
+      <li><b class="sw warn"></b>Hết phiên, đang chứng minh lại</li>
+      <li><b class="sw flow"></b>Bản tin dữ liệu</li>
+      <li class="hint-inline">Bấm vào một thiết bị trên sơ đồ để điều khiển nó</li>
+    </ul>
+  </section>
+
+  <div class="lower">
+    <section class="panel" aria-labelledby="h-dev">
+      <div class="panel-head">
+        <h2 id="h-dev">Thiết bị</h2>
+        <span class="hint-inline">Chọn topic và vai trò rồi bấm Bật. Thiết bị tự tạo proof và tự chứng minh lại khi hết phiên.</span>
+      </div>
+      <table class="devices">
+        <thead><tr><th>Thiết bị</th><th>Trạng thái</th><th>Topic</th><th>Vai trò</th><th>Phiên còn</th><th class="num">Tạo proof</th><th class="num">Bản tin</th><th></th></tr></thead>
+        <tbody id="dev-body"></tbody>
+      </table>
+      <p class="hint">Dòng chữ nhỏ dưới mã thiết bị là hồ sơ của Issuer (MDM), giúp người xem hiểu kết quả. PEP và PDP không nhận các thông tin này.</p>
+    </section>
+
+    <section class="panel logs" aria-labelledby="h-log">
+      <div class="panel-head">
+        <h2 id="h-log">Nhật ký</h2>
+        <label class="toggle" id="pub-toggle"><input type="checkbox" id="show-pub"> Hiện bản tin dữ liệu</label>
+      </div>
+      <div class="tabs" role="tablist" id="log-tabs">
+        <button role="tab" aria-selected="true" data-tab="events">Sự kiện</button>
+        <button role="tab" aria-selected="false" data-tab="pdp">PDP</button>
+        <button role="tab" aria-selected="false" data-tab="pep">PEP</button>
+        <button role="tab" aria-selected="false" data-tab="dev">Thiết bị</button>
+        <button role="tab" aria-selected="false" data-tab="issuer">Issuer</button>
+        <button role="tab" aria-selected="false" data-tab="policy">Chính sách</button>
+      </div>
+      <select id="log-dev" class="log-dev" aria-label="Chọn thiết bị để xem nhật ký" hidden></select>
+      <ol id="ev-list" class="events"></ol>
+      <pre id="con" class="con" hidden></pre>
+    </section>
+  </div>
+
+  <section class="panel" aria-labelledby="h-pol">
+    <div class="panel-head">
+      <h2 id="h-pol">Chính sách theo topic</h2>
+      <span class="hint-inline">PDP đọc lại chính sách ở mỗi yêu cầu, nên thay đổi có hiệu lực ngay ở lần chứng minh kế tiếp, không cần biên dịch lại mạch.</span>
+    </div>
+    <table class="policy">
+      <thead><tr><th>Topic</th><th>Firmware tối thiểu</th><th>Mức an toàn tối thiểu</th><th>Loại thiết bị được phép</th><th>Thời hạn phiên (s)</th><th></th></tr></thead>
+      <tbody id="pol-body"></tbody>
+    </table>
+  </section>
+
+  <section class="panel zk" aria-labelledby="h-zk">
+    <div class="panel-head">
+      <h2 id="h-zk">PDP thấy gì, không thấy gì</h2>
+      <span class="zk-meta" id="zk-meta">Chưa có lần kiểm tra nào</span>
+    </div>
+    <div class="zk-grid">
+      <div class="zk-col">
+        <h3>Thông điệp PDP nhận được</h3>
+        <dl class="zk-recv" id="zk-recv"></dl>
+        <h3>10 public input PDP dùng để kiểm tra proof</h3>
+        <table class="zk-pub"><thead><tr><th>#</th><th>Tên</th><th>Giá trị</th><th>Ai cung cấp</th></tr></thead><tbody id="zk-pub"></tbody></table>
+      </div>
+      <div class="zk-col">
+        <h3>Điều PDP biết được sau khi kiểm tra</h3>
+        <p class="zk-claim" id="zk-claim"></p>
+        <h3>Chỉ thiết bị biết, không bao giờ rời thiết bị</h3>
+        <ul class="zk-hidden" id="zk-hidden"></ul>
+        <p class="hint">Danh sách này lấy từ cấu trúc mạch DevicePosture, không phải từ dữ liệu của thiết bị. Dashboard cũng không đọc được các giá trị này.</p>
+      </div>
+    </div>
+  </section>
+</main>
+<script src="app.js"></script>
+<script src="control.js"></script>
+</body>
+</html>
