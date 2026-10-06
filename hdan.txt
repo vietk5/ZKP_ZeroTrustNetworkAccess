@@ -1,0 +1,389 @@
+MỤC LỤC
+  PHẦN 1. CÁC LỆNH ĐÃ THỰC HIỆN 
+  PHẦN 2. KHỞI ĐỘNG HỆ THỐNG MỖI LẦN CHẠY
+  PHẦN 3. QUY TRÌNH DEMO
+  PHẦN 4. DANH SÁCH LỆNH TRA CỨU NHANH
+  PHẦN 5. XỬ LÝ SỰ CỐ THƯỜNG GẶP
+
+
+================================================================================
+PHẦN 1. CÁC LỆNH ĐÃ THỰC HIỆN
+================================================================================
+
+--- GIAI ĐOẠN 0: CHUẨN BỊ MÔI TRƯỜNG ------------------------------------------
+
+node -v
+    -> Kiểm tra Node.js. Kết quả: v24.15.0
+
+mkdir circuits, config, scripts, issuer, pdp, pep, device, lib, experiments, build, data, results
+    -> Tạo cấu trúc thư mục dự án
+
+npm install
+    -> Cài 6 thư viện ghi trong package.json:
+       aedes 1.2.0, circom2 0.2.23, circomlib 2.0.5, circomlibjs 0.1.7,
+       mqtt 5.16.0, snarkjs 0.7.6
+
+npx snarkjs --version
+    -> snarkjs@0.7.6
+
+
+--- GIAI ĐOẠN 1: MẠCH VÀ TRUSTED SETUP -----------------------------------------
+
+[1.1] Biên dịch mạch
+
+Invoke-WebRequest -Uri "https://github.com/iden3/circom/releases/download/v2.2.3/circom-windows-amd64.exe" -OutFile circom.exe
+Unblock-File .\circom.exe
+
+.\circom.exe --version
+    -> Tải trình biên dịch Circom bản gốc cho Windows
+
+.\circom.exe circuits/device_posture.circom --r1cs --wasm --sym -o build -l node_modules
+    -> Biên dịch mạch DevicePosture.
+	--r1cs: xuất ra hệ phương trình: ds 9986 pt dạng axb=c, dùng cho quá trình trusted setup, qtr này sẽ đọc file này để nbooij suy thánh đá thức.
+	--wasm: xuất ra bộ tính witness, nhận input và tính giái trị cho toàn bộ khoảng 10000 dây của mạch. file này được dùng cho thiết bị mỗi lần tạo prooof, trong lib/prover.js, lệnh snarkjs.groth16.fullProve(input, WASM, ZKEY) chạy file .wasm trước để có witness, rồi mới dùng zkey để ghép proof. chính file .wasm này dừng lại khi dữ liệu không thỏa mạch tức là khi có 1 điêu kiện sai.
+       Kết quả: 8.279 ràng buộc phi tuyến (), 1.707 tuyến tính (),
+                9 public input, 8 private input, 1 output.
+       Sinh ra: build\device_posture.r1cs, build\device_posture.sym,
+                build\device_posture_js\device_posture.wasm
+
+npx snarkjs r1cs info build/device_posture.r1cs
+    -> Xem thống kê mạch: 9.986 ràng buộc
+
+[1.2] Trusted setup – Phase 1 (Powers of Tau)
+npx snarkjs powersoftau new bn128 14 build/pot14_ptau -v
+    -> Tạo khung Powers of Tau cỡ 2^14 = 16.384 ràng buộc, tạo một khung chứa các lũy thừa của τ dưới dạng điểm trên đường cong BN254
+
+npx snarkjs powersoftau contribute build/pot14_0000.ptau build/pot14_0001.ptau --name="Viet" -e="..."
+npx snarkjs powersoftau contribute build/pot14_0001.ptau build/pot14_0002.ptau --name="Duy" -e="..."
+    -> Hai lượt đóng góp bí mật (Việt rồi Duy). Lưu ý đúng chuỗi 0000 -> 0001 -> 0002
+
+npx snarkjs powersoftau verify build/pot14_0002.ptau
+    -> Kiểm tra chuỗi đóng góp. Kết quả: Contribution #1 Viet, #2 Duy, Powers Of tau file OK!
+
+Measure-Command { npx snarkjs powersoftau prepare phase2 build/pot14_0002.ptau build/pot14_final.ptau | Out-Default }
+    -> Chuẩn bị cho phase 2. Mất 71,65 giây. Sinh pot14_final.ptau (~18 MB)
+
+[1.2] Trusted setup – Phase 2 (riêng cho mạch)
+Measure-Command { npx snarkjs groth16 setup build/device_posture.r1cs build/pot14_final.ptau build/dp_0000.zkey | Out-Default }
+    -> Sinh zkey ban đầu từ mạch. Mất 7,42 giây
+
+npx snarkjs zkey contribute build/dp_0000.zkey build/device_posture.zkey --name="ZTNA-lab" -e="..."
+    -> Trộn bí mật mới vào delta
+
+npx snarkjs zkey verify build/device_posture.r1cs build/pot14_final.ptau build/device_posture.zkey
+    -> Kiểm tra zkey khớp mạch và ptau. Kết quả: ZKey Ok!
+
+npx snarkjs zkey export verificationkey build/device_posture.zkey build/verification_key.json
+    -> Xuất verification key cho PDP (4.574 byte)
+
+dir build
+    -> device_posture.zkey 5.291.906 byte | verification_key.json 4.574 byte
+
+
+--- GIAI ĐOẠN 2: THIẾT BỊ TỰ SINH KHÓA + ISSUER KÝ CREDENTIAL ------------------
+
+node device/keygen.js all
+    -> Mỗi thiết bị D1–D7 tự sinh sk_dev (giữ lại trong data\devices\<ID>\secret.json)
+       và gửi pk_dev cho Issuer (data\enroll\<ID>.json)
+
+node issuer/issue.js
+    -> Issuer (MDM) đọc pk_dev + hồ sơ config\devices.json,
+       tính C = Poseidon(pk_dev, fw, sec, dtype, exp), ký sigma = EdDSA(sk_Issuer, C)
+       Sinh: data\devices\<ID>\credential.json (trả cho thiết bị)
+             data\public\issuer_public.json   (khóa công khai Ax, Ay cho PDP)
+       Credential sống 24 giờ (cơ chế thu hồi bằng credential ngắn hạn)
+
+node scripts/test_proof.js D1
+node scripts/test_proof.js D2
+node scripts/test_proof.js D5
+node scripts/test_proof.js D7
+    -> Tạo proof thật và verify ngay. Kết quả trên laptop:
+       D1, D5: tạo được proof (D5: 666 ms, verify 9,2 ms, 725 byte)
+       D2: không tạo được proof (dòng 70: fw < minFw)
+       D7: không tạo được proof (dòng 79: credential hết hạn)
+       Sửa minFw = 100 trong publicSignals -> verify thất bại
+
+
+--- GIAI ĐOẠN 3: PDP --------------------------------------------------------------
+
+Terminal 1:  node pdp/pdp.js
+    -> Bật PDP ở http://127.0.0.1:8081
+
+Terminal 2:  node scripts/test_pdp.js D1 factory/temperature
+             node scripts/test_pdp.js D5 factory/humidity
+             node scripts/test_pdp.js D2 factory/temperature
+    -> Kết quả: proof hợp lệ ALLOW; phát lại DENY NONCE_UNKNOWN_OR_USED;
+       proof cũ + nonce mới DENY PROOF_INVALID; dùng sang topic camera DENY PROOF_INVALID;
+       D2 không tạo được proof. Prove ~630 ms, verify ~9 ms (lần đầu 188 ms)
+
+node scripts/check_0_3.js
+    -> Kiểm tra tổng thể Giai đoạn 0–3 (61 mục, ma trận 7 thiết bị x 4 topic)
+
+
+--- GIAI ĐOẠN 4: PEP + MQTT BROKER -------------------------------------------------
+
+Terminal 1:  node pdp/pdp.js
+Terminal 2:  $env:MAX_SESSION=10; node pep/pep.js
+Terminal 3:  node scripts/test_pep.js D1 factory/temperature
+             node scripts/test_pep.js D3 factory/humidity
+    -> Kết quả: không proof bị từ chối; D1 kết nối được và publish đúng topic;
+       subscribe admin bị từ chối (SUBACK 128); gửi lại gói CONNECT bị từ chối;
+       publish sang admin bị cắt kết nối; hết phiên sau 10,0 s thì bị ngắt;
+       D3 không tạo được proof (dòng 74: sec < minSec)
+
+
+--- GIAI ĐOẠN 5: THIẾT BỊ CHẠY LIÊN TỤC ------------------------------------------
+
+Terminal 1:  node pdp/pdp.js
+Terminal 2:  $env:MAX_SESSION=10; node pep/pep.js
+Terminal 3:  node device/device.js D1 factory/temperature pub 2
+Terminal 4:  node device/device.js D5 factory/temperature sub
+Terminal 5:  node scripts/set_policy.js factory/temperature minFw 400
+             node scripts/set_policy.js factory/temperature minFw 300
+    -> D1 gửi nhiệt độ mỗi 2 giây, D5 nhận được; cứ 10 giây chứng minh lại.
+       Nâng minFw lên 400: D5 (fw 300) mất quyền, D1 (fw 502) vẫn gửi.
+       Trả lại 300: D5 tự phục hồi.
+
+
+================================================================================
+PHẦN 2. KHỞI ĐỘNG HỆ THỐNG MỖI LẦN CHẠY
+================================================================================
+
+BƯỚC 1. Cấp lại credential (BẮT BUỘC nếu đã quá 24 giờ kể từ lần cấp trước)
+    node issuer/issue.js
+
+BƯỚC 2. Mở 3–5 terminal (VS Code: Ctrl+Shift+5 để chia đôi terminal)
+
+    Terminal 1 (PDP – bật TRƯỚC):
+        node pdp/pdp.js
+
+    Terminal 2 (PEP + broker – bật SAU PDP):
+        $env:MAX_SESSION=10; node pep/pep.js
+        (bỏ "$env:MAX_SESSION=10;" nếu muốn phiên dài thật theo chính sách 60–300 s)
+
+    Terminal 3, 4, 5: chạy thiết bị hoặc các script kiểm tra
+
+BƯỚC 3. Tắt hệ thống: bấm Ctrl+C ở từng terminal
+
+
+================================================================================
+PHẦN 3. QUY TRÌNH DEMO CHO THẦY (khoảng 15–20 phút)
+================================================================================
+
+CHUẨN BỊ TRƯỚC BUỔI DEMO (làm trước khi gặp thầy)
+  [ ] node issuer/issue.js                  (cấp lại credential mới, còn 24 giờ)
+  [ ] Kiểm tra config\policies.json: factory/temperature minFw = 300
+  [ ] Kiểm tra config\devices.json:   [ ] Mở sẵn 5 terminal trong VS Code, tất cả đứng ở thư mục zkp-ztna-iot
+  [ ] Mở sẵn file circuits\device_posture.circom để chỉ cho thầy
+
+Sơ đồ terminal:
+  T1 = PDP        T2 = PEP        T3 = thiết bị D1
+  T4 = thiết bị D5                T5 = lệnh quản trị / kiểm tra
+
+
+-------------------------------------------------------------------------------
+DEMO 1 – Giới thiệu mạch và khóa (2 phút) – chưa cần bật dịch vụ
+-------------------------------------------------------------------------------
+Mở circuits\device_posture.circom, chỉ các khối:
+  - Num2Bits (SR2), Poseidon(sk_dev) (SR4), Poseidon(5) + EdDSA (SR3),
+    GreaterEqThan fw/sec/exp (SR1, SR8), tích (dtype - a_i) (loại thiết bị),
+    sessionTag = Poseidon(sk_dev, nonce) (SR5, SR7)
+
+T5:  npx snarkjs r1cs info build/device_posture.r1cs
+     -> 9.986 ràng buộc, 9 public input, 8 private input
+T5:  dir build
+     -> zkey ~5 MB (thiết bị giữ) vs verification_key ~4,5 KB (PDP giữ)
+Ý chính: bên kiểm tra rất nhẹ, không phụ thuộc kích thước mạch (succinct).
+
+
+-------------------------------------------------------------------------------
+DEMO 2 – Thiết bị tự sinh khóa, Issuer chỉ thấy pk_dev (1 phút)
+-------------------------------------------------------------------------------
+T5:  type data\enroll\D1.json
+     -> chỉ có deviceId và pk_dev  (Issuer KHÔNG biết sk_dev)
+T5:  type data\devices\D1\credential.json
+     -> fw, sec, dtype, exp, chữ ký R8x R8y S (không có sk_dev)
+Ý chính: mỗi bên chỉ biết đúng phần của mình, giống cơ chế CSR thực tế.
+
+
+-------------------------------------------------------------------------------
+DEMO 3 – Tạo proof, PDP không thấy dữ liệu bí mật (2 phút)
+-------------------------------------------------------------------------------
+T5:  node scripts/test_proof.js D1
+     -> ✓ tạo được proof ~700 ms, verify ~10 ms, proof ~725 byte
+     -> In 10 giá trị PDP nhìn thấy: KHÔNG có fw, sec, dtype, exp, sk_dev
+     -> Sửa minFw = 100 rồi verify lại: KHÔNG HỢP LỆ – bị phát hiện
+T5:  node scripts/test_proof.js D2
+     -> ✗ không tạo được proof (dòng 70: firmware 210 < 300)
+Ý chính: thiết bị không đạt thì không thể tạo proof; PDP không biết nó
+         trượt ở điều kiện nào.
+
+
+-------------------------------------------------------------------------------
+DEMO 4 – Bật hệ thống, kiểm tra PEP chặn đúng (3 phút)
+-------------------------------------------------------------------------------
+T1:  node pdp/pdp.js
+T2:  $env:MAX_SESSION=10; node pep/pep.js
+T5:  node scripts/test_pep.js D1 factory/temperature
+     Kết quả mong đợi:
+     A. Kết nối không kèm proof        -> BỊ TỪ CHỐI
+     B. Kết nối có proof hợp lệ        -> KẾT NỐI ĐƯỢC
+        publish factory/temperature    -> ĐƯỢC CHẤP NHẬN
+        subscribe factory/admin        -> BỊ TỪ CHỐI (SUBACK 128)
+     E. Gửi lại gói CONNECT cũ         -> BỊ TỪ CHỐI (chống phát lại)
+     F. Publish sang factory/admin     -> BỊ CHẶN, PEP ngắt kết nối
+     G. Chờ hết phiên                  -> PEP ngắt sau 10 s
+Chỉ thêm cho thầy cửa sổ T1 và T2 (nhật ký PDP, PEP).
+
+
+-------------------------------------------------------------------------------
+DEMO 5 – Nhà máy chạy thật: D1 gửi, D5 nhận (2 phút)
+-------------------------------------------------------------------------------
+(T1, T2 vẫn đang chạy)
+T3:  node device/device.js D1 factory/temperature pub 2
+T4:  node device/device.js D5 factory/temperature sub
+     -> D1 in "gửi {...temp_C...}" mỗi 2 giây, D5 in "nhận ..."
+     -> Cứ 10 giây cả hai: SESSION_END rồi AUTH_OK (xác thực liên tục)
+Ý chính: cả bên gửi và bên nhận đều phải chứng minh (Zero Trust).
+
+
+-------------------------------------------------------------------------------
+DEMO 6 – Siết chính sách khi đang chạy (3 phút)  ★ phần ấn tượng nhất
+-------------------------------------------------------------------------------
+(T1–T4 vẫn đang chạy)
+T5:  node scripts/set_policy.js factory/temperature minFw 400
+     -> Trong vòng ~10 s:
+        D5 (fw 300): PROOF_FAIL "không còn đạt chính sách", ngừng nhận dữ liệu
+        D1 (fw 502): vẫn gửi bình thường (có thể bị AUTH_DENY 1 lần rồi vào lại ngay)
+     Ý chính: thu hồi CÓ CHỌN LỌC theo thuộc tính mà PDP không cần biết
+              fw của từng thiết bị. Không cần khởi động lại gì.
+T5:  node scripts/set_policy.js factory/temperature minFw 300
+     -> D5 tự lấy lại quyền (AUTH_OK) trong vòng ~10 s
+
+
+-------------------------------------------------------------------------------
+DEMO 7 – Đánh cắp credential (1 phút)
+-------------------------------------------------------------------------------
+(Bấm Ctrl+C ở T3, T4 cho gọn)
+T5:  Copy-Item data\devices\D2\credential.json data\devices\D2\credential.bak
+T5:  Copy-Item data\devices\D1\credential.json data\devices\D2\credential.json
+T5:  node scripts/test_proof.js D2
+     -> ✗ không tạo được proof (lỗi trong khối kiểm chữ ký EdDSA)
+T5:  Copy-Item data\devices\D2\credential.bak data\devices\D2\credential.json
+     (TRẢ LẠI credential gốc cho D2 – đừng quên)
+Ý chính: lấy được file credential mà không có sk_dev thì vô dụng (SR4).
+
+
+-------------------------------------------------------------------------------
+DEMO 8 – PDP sập: hệ thống đóng, không mở (1 phút)
+-------------------------------------------------------------------------------
+T3:  node device/device.js D1 factory/temperature pub 2
+T1:  bấm Ctrl+C (tắt PDP)
+     -> Hết phiên, D1 báo CHALLENGE_ERR PDP_UNREACHABLE, không vào lại được
+T1:  node pdp/pdp.js   (bật lại)
+     -> D1 tự phục hồi AUTH_OK
+Ý chính: nguyên tắc fail-closed của Zero Trust.
+
+
+-------------------------------------------------------------------------------
+DEMO 9 – Tổng kết bằng kiểm tra tự động (1 phút)
+-------------------------------------------------------------------------------
+(Bấm Ctrl+C ở T3)
+T5:  node scripts/check_0_3.js
+     -> Ma trận 7 thiết bị x 4 topic:
+          D1: chỉ temperature | D5: temperature + humidity | D6: chỉ camera
+          D2, D3, D4, D7: DENY mọi topic | admin: không ai vào được
+     -> TỔNG KẾT: 61/61 mục ĐẠT
+Mở logs\pdp_decisions.csv bằng Excel: chỉ có time, resource, decision, reason,
+verify_ms, sessionTag – KHÔNG có thuộc tính thiết bị.
+
+
+SAU DEMO – DỌN DẸP
+  - Ctrl+C ở tất cả terminal
+  - Kiểm tra lại: minFw temperature = 300, credential D2 đã trả lại
+
+
+================================================================================
+PHẦN 4. DANH SÁCH LỆNH TRA CỨU NHANH
+================================================================================
+
+CẤP CREDENTIAL
+  node device/keygen.js all                     Thiết bị tự sinh khóa (một lần)
+  node issuer/issue.js                          Issuer ký credential (mỗi 24 giờ)
+
+DỊCH VỤ
+  node pdp/pdp.js                               PDP, cổng 8081
+  node pep/pep.js                               PEP + broker, cổng 1883 / 8080
+  $env:MAX_SESSION=10; node pep/pep.js          PEP với phiên 10 giây (demo)
+
+THIẾT BỊ
+  node device/device.js <ID> <topic> pub <giây> Thiết bị gửi dữ liệu định kỳ
+  node device/device.js <ID> <topic> sub        Thiết bị nhận dữ liệu
+
+QUẢN TRỊ CHÍNH SÁCH
+  node scripts/set_policy.js <topic> minFw <số>
+  node scripts/set_policy.js <topic> minSec <số>
+  node scripts/set_policy.js <topic> allowedTypes "[4,4,4]"
+  node scripts/set_policy.js <topic> ttl <giây>
+
+KIỂM TRA
+  node scripts/test_proof.js <ID>               Tạo + verify proof tại chỗ
+  node scripts/test_pdp.js <ID> <topic>         Gọi thẳng PDP + 3 phép tấn công (cần PDP)
+  node scripts/test_pep.js <ID> <topic>         Kết nối MQTT qua PEP, phép thử A–G (cần PDP + PEP)
+  node scripts/check_0_3.js                     Kiểm tra tổng thể Giai đoạn 0–3
+
+THIẾT BỊ VÀ TÀI NGUYÊN
+  D1 cảm biến nhiệt  fw 502 sec 4 dtype 1   -> temperature
+  D2 cảm biến nhiệt  fw 210 sec 4 dtype 1   -> không đạt (firmware cũ)
+  D3 cảm biến ẩm     fw 502 sec 2 dtype 2   -> không đạt (sec thấp)
+  D4 cảm biến ẩm     fw 210 sec 2 dtype 2   -> không đạt cả hai
+  D5 gateway         fw 300 sec 3 dtype 4   -> temperature, humidity (biên)
+  D6 camera          fw 450 sec 4 dtype 3   -> camera
+  D7 cảm biến nhiệt  credential hết hạn     -> không đạt
+
+  factory/temperature  fw>=300 sec>=3 loại {1,4}  phiên 300 s
+  factory/humidity     fw>=300 sec>=3 loại {2,4}  phiên 300 s
+  factory/camera       fw>=400 sec>=4 loại {3}    phiên 120 s
+  factory/admin        fw>=500 sec>=5 loại {4}    phiên 60 s
+
+NHẬT KÝ
+  logs\pdp_decisions.csv     Quyết định của PDP
+  logs\pep_events.csv        Sự kiện kết nối, publish, subscribe
+  logs\device_<ID>.csv       Thời gian tạo proof của từng thiết bị
+  logs\policy_changes.csv    Lịch sử đổi chính sách
+  results\check_0_3.csv      Kết quả kiểm tra tổng thể
+
+
+================================================================================
+PHẦN 5. XỬ LÝ SỰ CỐ THƯỜNG GẶP
+================================================================================
+
+Thiết bị đạt chuẩn (D1, D5, D6) bỗng không tạo được proof, lỗi ở dòng 79
+  -> Credential hết hạn 24 giờ. Chạy: node issuer/issue.js
+
+"EADDRINUSE: address already in use 127.0.0.1:8081" (hoặc 1883, 8080)
+  -> PDP/PEP đang chạy ở terminal khác. Tắt bản cũ (Ctrl+C) hoặc dùng luôn bản đó.
+
+Thiết bị báo PEP_UNREACHABLE
+  -> Chưa bật PEP (Terminal 2).
+
+Thiết bị báo CHALLENGE_ERR PDP_UNREACHABLE
+  -> Chưa bật PDP (Terminal 1), hoặc bật PEP trước PDP.
+
+D5 mãi PROOF_FAIL ở topic temperature
+  -> Chính sách đang để minFw = 400. Chạy:
+     node scripts/set_policy.js factory/temperature minFw 300
+
+"Could not write the output in the given path" khi biên dịch mạch
+  -> Dùng .\circom.exe thay vì node node_modules/circom2/cli.js
+
+Kết nối MQTT bị treo, không phản hồi
+  -> Client gửi password mà thiếu username (chuẩn MQTT 3.1.1 bắt buộc).
+     Các script hiện tại đã đặt username "zkp-proof".
+
+Dòng "ERROR: 4 Error in template DevicePosture_251 line: XX"
+  -> Không phải lỗi chương trình: đó là thiết bị không đạt chính sách.
+     line 70 = firmware | line 74 = mức an toàn | line 79 = hết hạn
+     ForceEqualIfEnabled line 56 = chữ ký không khớp (credential không phải của mình)
+
+================================================================================

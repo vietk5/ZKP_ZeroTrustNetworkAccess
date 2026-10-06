@@ -1,0 +1,10 @@
+time,device,topic,event,prove_ms,auth_ms
+2026-10-06T13:18:31.913Z,D5,factory/temperature,AUTH_OK,653,742
+2026-10-06T13:18:41.920Z,D5,factory/temperature,SESSION_END,,
+2026-10-06T13:18:42.896Z,D5,factory/temperature,AUTH_OK,417,466
+2026-10-06T13:18:52.903Z,D5,factory/temperature,SESSION_END,,
+2026-10-06T13:18:53.927Z,D5,factory/temperature,AUTH_OK,480,510
+2026-10-06T13:19:03.935Z,D5,factory/temperature,SESSION_END,,
+2026-10-06T13:19:04.985Z,D5,factory/temperature,AUTH_OK,512,539
+2026-10-06T13:19:14.991Z,D5,factory/temperature,SESSION_END,,
+2026-10-06T13:19:16.019Z,D5,factory/temperature,AUTH_OK,484,513

@@ -1,0 +1,10 @@
+{
+  "_ghi_chu": "Hồ sơ thiết bị do MDM quản lý. D1–D5 theo Bảng 2.12 Chương 2 (minFw 300, minSec 3); D6 camera; D7 credential đã hết hạn. dtype: 1 cảm biến nhiệt, 2 cảm biến ẩm, 3 camera, 4 gateway. validHours: thời hạn credential tính bằng giờ (âm = đã hết hạn).",
+  "D1": { "fw": 502, "sec": 4, "dtype": 1, "validHours": 24, "mo_ta": "Cảm biến nhiệt, đạt chuẩn" },
+  "D2": { "fw": 210, "sec": 4, "dtype": 1, "validHours": 24, "mo_ta": "Cảm biến nhiệt, firmware cũ" },
+  "D3": { "fw": 502, "sec": 2, "dtype": 2, "validHours": 24, "mo_ta": "Cảm biến ẩm, mức an toàn thấp" },
+  "D4": { "fw": 210, "sec": 2, "dtype": 2, "validHours": 24, "mo_ta": "Cảm biến ẩm, không đạt cả hai" },
+  "D5": { "fw": 300, "sec": 3, "dtype": 4, "validHours": 24, "mo_ta": "Gateway, đúng bằng ngưỡng (trường hợp biên)" },
+  "D6": { "fw": 450, "sec": 4, "dtype": 3, "validHours": 24, "mo_ta": "Camera" },
+  "D7": { "fw": 502, "sec": 4, "dtype": 1, "validHours": -1, "mo_ta": "Cảm biến nhiệt, credential đã hết hạn" }
+}

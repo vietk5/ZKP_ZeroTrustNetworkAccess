@@ -1,0 +1,7 @@
+{
+  "_ghi_chu": "Chính sách theo tài nguyên (Bảng 2.13 Chương 2) – do Policy Administrator quản lý. allowedTypes luôn đủ 3 phần tử (K = 3), lặp lại nếu ít hơn. Mã loại: 1 cảm biến nhiệt, 2 cảm biến ẩm, 3 camera, 4 gateway. ttl: thời hạn phiên (giây) trước khi phải chứng minh lại.",
+  "factory/temperature": { "minFw": 300, "minSec": 3, "allowedTypes": [1, 4, 4], "ttl": 300 },
+  "factory/humidity":    { "minFw": 300, "minSec": 3, "allowedTypes": [2, 4, 4], "ttl": 300 },
+  "factory/camera":      { "minFw": 400, "minSec": 4, "allowedTypes": [3, 3, 3], "ttl": 120 },
+  "factory/admin":       { "minFw": 500, "minSec": 5, "allowedTypes": [4, 4, 4], "ttl": 60 }
+}

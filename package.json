@@ -1,0 +1,13 @@
+{
+  "name": "zkp-ztna-iot",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "aedes": "1.2.0",
+    "circom2": "0.2.23",
+    "circomlib": "2.0.5",
+    "circomlibjs": "0.1.7",
+    "mqtt": "5.16.0",
+    "snarkjs": "0.7.6"
+  }
+}

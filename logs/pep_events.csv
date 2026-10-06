@@ -1,0 +1,133 @@
+time,clientId,event,topic,detail
+2026-10-01T08:29:41.115Z,D1-no-proof,CONNECT_DENY,,không có proof
+2026-10-01T08:29:41.954Z,D1-connect-with-proof,CONNECT_ALLOW,factory/temperature,phiên 10s
+2026-10-01T08:29:41.958Z,D1-connect-with-proof,PUBLISH_OK,factory/temperature,{"device":"D1","value":27.5,"t":17908433
+2026-10-01T08:29:41.960Z,D1-connect-with-proof,SUBSCRIBE_DENY,factory/admin,chỉ được phép factory/temperature
+2026-10-01T08:29:41.965Z,D1-replay-connect,CONNECT_DENY,factory/temperature,NONCE_UNKNOWN_OR_USED
+2026-10-01T08:29:41.967Z,D1-connect-with-proof,PUBLISH_DENY,factory/admin,chỉ được phép factory/temperature
+2026-10-01T08:29:42.003Z,D1-connect-with-proof,DISCONNECT,factory/temperature,
+2026-10-01T08:29:43.248Z,D1-session-test,CONNECT_ALLOW,factory/temperature,phiên 10s
+2026-10-01T08:29:53.256Z,D1-session-test,SESSION_EXPIRED,factory/temperature,sau 10s
+2026-10-01T08:29:53.257Z,D1-session-test,DISCONNECT,factory/temperature,
+2026-10-01T08:30:03.967Z,D1-no-proof,CONNECT_DENY,,không có proof
+2026-10-01T08:30:04.592Z,D1-connect-with-proof,CONNECT_ALLOW,factory/temperature,phiên 10s
+2026-10-01T08:30:04.595Z,D1-connect-with-proof,PUBLISH_OK,factory/temperature,{"device":"D1","value":27.5,"t":17908434
+2026-10-01T08:30:04.597Z,D1-connect-with-proof,SUBSCRIBE_DENY,factory/admin,chỉ được phép factory/temperature
+2026-10-01T08:30:04.601Z,D1-replay-connect,CONNECT_DENY,factory/temperature,NONCE_UNKNOWN_OR_USED
+2026-10-01T08:30:04.602Z,D1-connect-with-proof,PUBLISH_DENY,factory/admin,chỉ được phép factory/temperature
+2026-10-01T08:30:04.602Z,D1-connect-with-proof,DISCONNECT,factory/temperature,
+2026-10-01T08:30:05.900Z,D1-session-test,CONNECT_ALLOW,factory/temperature,phiên 10s
+2026-10-01T08:30:34.748Z,D1-no-proof,CONNECT_DENY,,không có proof
+2026-10-01T08:30:35.562Z,D1-connect-with-proof,CONNECT_ALLOW,factory/temperature,phiên 10s
+2026-10-01T08:30:35.566Z,D1-connect-with-proof,PUBLISH_OK,factory/temperature,{"device":"D1","value":27.5,"t":17908434
+2026-10-01T08:30:35.568Z,D1-connect-with-proof,SUBSCRIBE_DENY,factory/admin,chỉ được phép factory/temperature
+2026-10-01T08:30:35.574Z,D1-replay-connect,CONNECT_DENY,factory/temperature,NONCE_UNKNOWN_OR_USED
+2026-10-01T08:30:35.576Z,D1-connect-with-proof,PUBLISH_DENY,factory/admin,chỉ được phép factory/temperature
+2026-10-01T08:30:35.577Z,D1-connect-with-proof,DISCONNECT,factory/temperature,
+2026-10-01T08:30:36.855Z,D1-session-test,CONNECT_ALLOW,factory/temperature,phiên 10s
+2026-10-01T08:30:46.862Z,D1-session-test,SESSION_EXPIRED,factory/temperature,sau 10s
+2026-10-01T08:30:46.864Z,D1-session-test,DISCONNECT,factory/temperature,
+2026-10-01T08:32:34.503Z,D3-no-proof,CONNECT_DENY,,không có proof
+2026-10-01T08:32:48.385Z,D3-no-proof,CONNECT_DENY,,không có proof
+2026-10-06T13:16:45.093Z,D1-no-proof,CONNECT_DENY,,không có proof
+2026-10-06T13:16:46.005Z,D1-connect-with-proof,CONNECT_ALLOW,factory/temperature,phiên 10s
+2026-10-06T13:16:46.016Z,D1-connect-with-proof,PUBLISH_OK,factory/temperature,{"device":"D1","value":27.5,"t":17912926
+2026-10-06T13:16:46.021Z,D1-connect-with-proof,SUBSCRIBE_DENY,factory/admin,chỉ được phép factory/temperature
+2026-10-06T13:16:46.035Z,D1-replay-connect,CONNECT_DENY,factory/temperature,NONCE_UNKNOWN_OR_USED
+2026-10-06T13:16:46.038Z,D1-connect-with-proof,PUBLISH_DENY,factory/admin,chỉ được phép factory/temperature
+2026-10-06T13:16:46.040Z,D1-connect-with-proof,DISCONNECT,factory/temperature,
+2026-10-06T13:16:47.332Z,D1-session-test,CONNECT_ALLOW,factory/temperature,phiên 10s
+2026-10-06T13:16:57.336Z,D1-session-test,SESSION_EXPIRED,factory/temperature,sau 10s
+2026-10-06T13:16:57.336Z,D1-session-test,DISCONNECT,factory/temperature,
+2026-10-06T13:17:42.625Z,D1-r1,CONNECT_ALLOW,factory/temperature,phiên 10s
+2026-10-06T13:17:42.642Z,D1-r1,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":26.36,"t":179129
+2026-10-06T13:17:44.656Z,D1-r1,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":27.03,"t":179129
+2026-10-06T13:17:46.657Z,D1-r1,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":26.79,"t":179129
+2026-10-06T13:17:48.669Z,D1-r1,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":26.74,"t":179129
+2026-10-06T13:17:50.684Z,D1-r1,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":27.3,"t":1791292
+2026-10-06T13:17:52.635Z,D1-r1,SESSION_EXPIRED,factory/temperature,sau 10s
+2026-10-06T13:17:52.636Z,D1-r1,DISCONNECT,factory/temperature,
+2026-10-06T13:17:53.630Z,D1-r2,CONNECT_ALLOW,factory/temperature,phiên 10s
+2026-10-06T13:17:53.635Z,D1-r2,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":25.25,"t":179129
+2026-10-06T13:17:55.644Z,D1-r2,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":26.27,"t":179129
+2026-10-06T13:17:57.658Z,D1-r2,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":29.57,"t":179129
+2026-10-06T13:17:59.674Z,D1-r2,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":28.01,"t":179129
+2026-10-06T13:18:01.681Z,D1-r2,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":26.94,"t":179129
+2026-10-06T13:18:03.640Z,D1-r2,SESSION_EXPIRED,factory/temperature,sau 10s
+2026-10-06T13:18:03.642Z,D1-r2,DISCONNECT,factory/temperature,
+2026-10-06T13:18:04.619Z,D1-r3,CONNECT_ALLOW,factory/temperature,phiên 10s
+2026-10-06T13:18:04.621Z,D1-r3,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":27.77,"t":179129
+2026-10-06T13:18:06.630Z,D1-r3,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":26.79,"t":179129
+2026-10-06T13:18:08.633Z,D1-r3,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":26.27,"t":179129
+2026-10-06T13:18:10.648Z,D1-r3,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":25.94,"t":179129
+2026-10-06T13:18:12.660Z,D1-r3,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":26.37,"t":179129
+2026-10-06T13:18:14.628Z,D1-r3,SESSION_EXPIRED,factory/temperature,sau 10s
+2026-10-06T13:18:14.630Z,D1-r3,DISCONNECT,factory/temperature,
+2026-10-06T13:18:15.685Z,D1-r4,CONNECT_ALLOW,factory/temperature,phiên 10s
+2026-10-06T13:18:15.687Z,D1-r4,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":27.5,"t":1791292
+2026-10-06T13:18:17.699Z,D1-r4,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":28.59,"t":179129
+2026-10-06T13:18:19.713Z,D1-r4,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":29.23,"t":179129
+2026-10-06T13:18:21.715Z,D1-r4,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":25.17,"t":179129
+2026-10-06T13:18:23.716Z,D1-r4,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":26.16,"t":179129
+2026-10-06T13:18:25.687Z,D1-r4,SESSION_EXPIRED,factory/temperature,sau 10s
+2026-10-06T13:18:25.687Z,D1-r4,DISCONNECT,factory/temperature,
+2026-10-06T13:18:26.659Z,D1-r5,CONNECT_ALLOW,factory/temperature,phiên 10s
+2026-10-06T13:18:26.695Z,D1-r5,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":26.41,"t":179129
+2026-10-06T13:18:28.710Z,D1-r5,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":29.13,"t":179129
+2026-10-06T13:18:30.727Z,D1-r5,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":29.95,"t":179129
+2026-10-06T13:18:31.910Z,D5-r1,CONNECT_ALLOW,factory/temperature,phiên 10s
+2026-10-06T13:18:31.926Z,D5-r1,SUBSCRIBE_OK,factory/temperature,
+2026-10-06T13:18:32.741Z,D1-r5,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":28,"t":179129271
+2026-10-06T13:18:34.742Z,D1-r5,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":28.4,"t":1791292
+2026-10-06T13:18:36.671Z,D1-r5,SESSION_EXPIRED,factory/temperature,sau 10s
+2026-10-06T13:18:36.673Z,D1-r5,DISCONNECT,factory/temperature,
+2026-10-06T13:18:37.689Z,D1-r6,CONNECT_ALLOW,factory/temperature,phiên 10s
+2026-10-06T13:18:37.691Z,D1-r6,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":26.41,"t":179129
+2026-10-06T13:18:39.706Z,D1-r6,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":26.76,"t":179129
+2026-10-06T13:18:41.707Z,D1-r6,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":29.43,"t":179129
+2026-10-06T13:18:41.911Z,D5-r1,SESSION_EXPIRED,factory/temperature,sau 10s
+2026-10-06T13:18:41.914Z,D5-r1,DISCONNECT,factory/temperature,
+2026-10-06T13:18:42.893Z,D5-r2,CONNECT_ALLOW,factory/temperature,phiên 10s
+2026-10-06T13:18:42.896Z,D5-r2,SUBSCRIBE_OK,factory/temperature,
+2026-10-06T13:18:43.718Z,D1-r6,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":27.64,"t":179129
+2026-10-06T13:18:45.729Z,D1-r6,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":29.66,"t":179129
+2026-10-06T13:18:47.699Z,D1-r6,SESSION_EXPIRED,factory/temperature,sau 10s
+2026-10-06T13:18:47.700Z,D1-r6,DISCONNECT,factory/temperature,
+2026-10-06T13:18:48.689Z,D1-r7,CONNECT_ALLOW,factory/temperature,phiên 10s
+2026-10-06T13:18:48.691Z,D1-r7,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":26.73,"t":179129
+2026-10-06T13:18:50.693Z,D1-r7,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":25.61,"t":179129
+2026-10-06T13:18:52.696Z,D1-r7,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":26.75,"t":179129
+2026-10-06T13:18:52.899Z,D5-r2,SESSION_EXPIRED,factory/temperature,sau 10s
+2026-10-06T13:18:52.900Z,D5-r2,DISCONNECT,factory/temperature,
+2026-10-06T13:18:53.926Z,D5-r3,CONNECT_ALLOW,factory/temperature,phiên 10s
+2026-10-06T13:18:53.928Z,D5-r3,SUBSCRIBE_OK,factory/temperature,
+2026-10-06T13:18:54.701Z,D1-r7,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":29.02,"t":179129
+2026-10-06T13:18:56.714Z,D1-r7,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":27.4,"t":1791292
+2026-10-06T13:18:58.702Z,D1-r7,SESSION_EXPIRED,factory/temperature,sau 10s
+2026-10-06T13:18:58.705Z,D1-r7,DISCONNECT,factory/temperature,
+2026-10-06T13:18:59.723Z,D1-r8,CONNECT_ALLOW,factory/temperature,phiên 10s
+2026-10-06T13:18:59.724Z,D1-r8,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":28.62,"t":179129
+2026-10-06T13:19:01.736Z,D1-r8,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":28.18,"t":179129
+2026-10-06T13:19:03.741Z,D1-r8,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":27.03,"t":179129
+2026-10-06T13:19:03.929Z,D5-r3,SESSION_EXPIRED,factory/temperature,sau 10s
+2026-10-06T13:19:03.931Z,D5-r3,DISCONNECT,factory/temperature,
+2026-10-06T13:19:04.984Z,D5-r4,CONNECT_ALLOW,factory/temperature,phiên 10s
+2026-10-06T13:19:04.986Z,D5-r4,SUBSCRIBE_OK,factory/temperature,
+2026-10-06T13:19:05.742Z,D1-r8,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":29.12,"t":179129
+2026-10-06T13:19:07.748Z,D1-r8,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":29.8,"t":1791292
+2026-10-06T13:19:09.737Z,D1-r8,SESSION_EXPIRED,factory/temperature,sau 10s
+2026-10-06T13:19:09.738Z,D1-r8,DISCONNECT,factory/temperature,
+2026-10-06T13:19:10.763Z,D1-r9,CONNECT_ALLOW,factory/temperature,phiên 10s
+2026-10-06T13:19:10.766Z,D1-r9,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":29.85,"t":179129
+2026-10-06T13:19:12.776Z,D1-r9,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":25.37,"t":179129
+2026-10-06T13:19:14.788Z,D1-r9,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":28.17,"t":179129
+2026-10-06T13:19:14.989Z,D5-r4,SESSION_EXPIRED,factory/temperature,sau 10s
+2026-10-06T13:19:14.989Z,D5-r4,DISCONNECT,factory/temperature,
+2026-10-06T13:19:16.018Z,D5-r5,CONNECT_ALLOW,factory/temperature,phiên 10s
+2026-10-06T13:19:16.055Z,D5-r5,SUBSCRIBE_OK,factory/temperature,
+2026-10-06T13:19:16.789Z,D1-r9,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":28.18,"t":179129
+2026-10-06T13:19:18.790Z,D1-r9,PUBLISH_OK,factory/temperature,{"device":"D1","temp_C":28.9,"t":1791292
+2026-10-06T13:19:19.960Z,D5-r5,DISCONNECT,factory/temperature,
+2026-10-06T13:19:20.765Z,D1-r9,SESSION_EXPIRED,factory/temperature,sau 10s
+2026-10-06T13:19:20.767Z,D1-r9,DISCONNECT,factory/temperature,
+2026-10-06T13:19:21.767Z,D1-r10,CONNECT_DENY,factory/temperature,PDP_UNREACHABLE
